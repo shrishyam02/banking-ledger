@@ -51,11 +51,13 @@ type ApiAuth struct {
 
 // LoadConfig loads the overall application configuration.
 func LoadConfig() (*Config, error) {
-
-	err := godotenv.Load()
-	if err != nil {
-		return nil, err
+	if os.Getenv("IS_LOCAL") == "true" {
+		err := godotenv.Load()
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	services := make(map[string]*ServiceConfig)
 
 	// Load configuration for each service
