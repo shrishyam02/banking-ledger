@@ -1,16 +1,16 @@
 package server
 
 import (
-	"common/logger"
 	"encoding/base64"
 	"net/http"
-	"os"
 	"strings"
+
+	"github.com/shrishyam02/banking-ledger/common/logger"
 
 	"github.com/gin-gonic/gin"
 )
 
-func basicAuthMiddleware() gin.HandlerFunc {
+func basicAuthMiddleware(config Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		auth := c.Request.Header.Get("Authorization")
 
@@ -20,10 +20,7 @@ func basicAuthMiddleware() gin.HandlerFunc {
 		}
 
 		providedUsername, providedPassword, ok := parseBasicAuth(auth)
-
-		username := os.Getenv("API_AUTH_USERNAME")
-		password := os.Getenv("API_AUTH_PASSWORD")
-		if !ok || providedUsername != username || providedPassword != password {
+		if !ok || providedUsername != config.ApiAuth.UserName || providedPassword != config.ApiAuth.Password {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
 			return
 		}
@@ -33,9 +30,9 @@ func basicAuthMiddleware() gin.HandlerFunc {
 }
 
 func parseBasicAuth(auth string) (string, string, bool) {
-	if len(auth) > 6 && strings.ToUpper(auth[:6]) == "BASIC" {
-		b64 := auth[6:]
-		decoded, err := base64.StdEncoding.DecodeString(b64)
+	hparts := strings.Split(auth, " ")
+	if len(hparts) == 2 {
+		decoded, err := base64.StdEncoding.DecodeString(hparts[1])
 		if err != nil {
 			logger.Log.Error().Err(err).Msg("Error decoding base64 auth")
 			return "", "", false
@@ -46,5 +43,5 @@ func parseBasicAuth(auth string) (string, string, bool) {
 			return parts[0], parts[1], true
 		}
 	}
-	return "", "", false
+	return " ", " ", false
 }

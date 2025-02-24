@@ -1,15 +1,16 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/joho/godotenv"
 )
 
-//constants
+// constants
 const (
 	AccountService     = "ACCOUNT_SERVICE"
 	TransactionService = "TRANSACTION_SERVICE"
@@ -22,6 +23,7 @@ type Config struct {
 	Services map[string]*ServiceConfig
 	Database *DatabaseConfig
 	Kafka    *KafkaConfig
+	ApiAuth  *ApiAuth
 }
 
 // ServiceConfig holds the configuration for a specific service.
@@ -42,17 +44,19 @@ type KafkaConfig struct {
 	SchemaRegistryURL string `env:"SCHEMA_REGISTRY_URL" default:"http://schema-registry:8081"`
 }
 
+type ApiAuth struct {
+	UserName string `env:"API_AUTH_USERNAME" default:""`
+	Password string `env:"API_AUTH_PASSWORD" default:""`
+}
+
 // LoadConfig loads the overall application configuration.
 func LoadConfig() (*Config, error) {
+
+	err := godotenv.Load()
+	if err != nil {
+		return nil, err
+	}
 	services := make(map[string]*ServiceConfig)
-	dbConfig, err := LoadDatabaseConfig()
-	if err != nil {
-		return nil, err
-	}
-	kafkaConfig, err := LoadKafkaConfig()
-	if err != nil {
-		return nil, err
-	}
 
 	// Load configuration for each service
 	serviceNames := []string{"ACCOUNT_SERVICE", "TRANSACTION_SERVICE", "PROCESSOR_SERVICE", "LEDGER_SERVICE"}
@@ -66,8 +70,9 @@ func LoadConfig() (*Config, error) {
 
 	return &Config{
 		Services: services,
-		Database: dbConfig,
-		Kafka:    kafkaConfig,
+		Database: LoadDatabaseConfig(),
+		Kafka:    LoadKafkaConfig(),
+		ApiAuth:  LoadApiAuthConfig(),
 	}, nil
 }
 
@@ -112,25 +117,19 @@ func LoadServiceConfig(serviceName string) (*ServiceConfig, error) {
 }
 
 // LoadDatabaseConfig loads the database configuration.
-func LoadDatabaseConfig() (*DatabaseConfig, error) {
+func LoadDatabaseConfig() *DatabaseConfig {
 	postgresConnStr := os.Getenv("POSTGRES_CONNECTION_STRING")
-	if postgresConnStr == "" {
-		return nil, errors.New("missing env")
-	}
 
 	mongoConnStr := os.Getenv("MONGODB_CONNECTION_STRING")
-	if mongoConnStr == "" {
-		return nil, errors.New("missing env")
-	}
 
 	return &DatabaseConfig{
 		PostgresConnectionString: postgresConnStr,
 		MongoDBConnectionString:  mongoConnStr,
-	}, nil
+	}
 }
 
 // LoadKafkaConfig loads the kafka configuration.
-func LoadKafkaConfig() (*KafkaConfig, error) {
+func LoadKafkaConfig() *KafkaConfig {
 	kafkaBrokers := os.Getenv("KAFKA_BROKERS")
 	if kafkaBrokers == "" {
 		kafkaBrokers = "kafka:9092" // Default if not set
@@ -144,5 +143,15 @@ func LoadKafkaConfig() (*KafkaConfig, error) {
 	return &KafkaConfig{
 		Brokers:           kafkaBrokers,
 		SchemaRegistryURL: schemaRegistryURL,
-	}, nil
+	}
+}
+
+func LoadApiAuthConfig() *ApiAuth {
+	uname := os.Getenv("API_AUTH_USERNAME")
+	pass := os.Getenv("API_AUTH_PASSWORD")
+
+	return &ApiAuth{
+		UserName: uname,
+		Password: pass,
+	}
 }
