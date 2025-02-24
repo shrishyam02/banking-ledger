@@ -7,6 +7,8 @@ services:
     container_name: zookeeper
     ports:
       - "2181:2181"
+    networks:
+      - banking-ledger-network
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -18,6 +20,8 @@ services:
       - kafka
     ports:
       - "8081:8081"
+    networks:
+      - banking-ledger-network
     environment:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
@@ -32,20 +36,22 @@ services:
       - zookeeper
     ports:
       - "19092:19092"
+    networks:
+      - banking-ledger-network
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_INTERNAL://kafka:19092,
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      #KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-      #KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,INTERNAL://0.0.0.0:29092,EXTERNAL_PLAINTEXT://0.0.0.0:9094
-      #KAFKA_CREATE_TOPICS: "transaction_logs:1:1, account_creation:1:1, account_updates:1:1" # Create topics
+
 
   postgres:
     image: postgres:15-bullseye
     ports:
       - "5432:5432"
+    networks:
+      - banking-ledger-network
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -64,6 +70,8 @@ services:
     image: mongo:6.0.3
     ports:
       - "27017:27017"
+    networks:
+      - banking-ledger-network
     environment:
       MONGO_INITDB_ROOT_USERNAME: mongo 
       MONGO_INITDB_ROOT_PASSWORD: mongo
@@ -78,24 +86,31 @@ services:
       - "8000:8000"
     networks:
       - banking-ledger-network
-    # depends_on:
-      # - account-service
+    depends_on:
+      - account-service
       # - ledger-service
       # - transaction-processor
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
 
-  # account-service:
-  #   build:
-  #     context: ./services/account
-  #     dockerfile: Dockerfile
-  #   depends_on:
-  #     - kafka
-  #     - postgres
-  #   environment:
-  #     POSTGRES_CONNECTION_STRING: "postgres://your_user:your_password@postgres:5432/banking_ledger_db?sslmode=disable"
-  #     KAFKA_BROKERS: kafka:9092  # Important!
-  #     # ... other environment variables
+  account-service:
+    build:
+      context: ./services/account
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    networks:
+      - banking-ledger-network
+    depends_on:
+      - postgres
+    environment:
+      ACCOUNT_SERVICE_PORT: "8001"
+      ACCOUNT_SERVICE_LOG_LEVEL: debug
+      POSTGRES_CONNECTION_STRING: postgres://postgres:postgres@postgres:5432/banking_account_db
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      API_AUTH_USERNAME: "test"
+      API_AUTH_PASSWORD: "test"      
+      KAFKA_BROKERS: kafka:9092
 
   # ledger-service:
   #   build:
@@ -106,8 +121,7 @@ services:
   #     - mongo
   #   environment:
   #     MONGO_URI: "mongodb://mongo:27017/banking_ledger_db"
-  #     KAFKA_BROKERS: kafka:9092  # Important!
-  #     # ... other environment variables
+  #     KAFKA_BROKERS: kafka:9092
 
   # transaction-processor:
   #   build:
@@ -120,8 +134,7 @@ services:
   #   environment:
   #     POSTGRES_CONNECTION_STRING: "postgres://your_user:your_password@postgres:5432/banking_ledger_db?sslmode=disable"
   #     MONGO_URI: "mongodb://mongo:27017/banking_ledger_db"
-  #     KAFKA_BROKERS: kafka:9092  # Important!
-  #     # ... other environment variables
+  #     KAFKA_BROKERS: kafka:9092
 
 volumes:
   postgres_data:
