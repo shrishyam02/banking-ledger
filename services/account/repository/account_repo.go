@@ -67,7 +67,8 @@ func (r *accountRepository) UpdateAccountBalance(ctx context.Context, accountID 
 		logger.Log.Info().Msgf("handleAccountBalanceUpdate account balance pre update. %v account:(%v %v %v)", account, accountID, amount, transactionType)
 
 		account.Version++
-		result := tx.Model(&account).Where("id = ? AND version = ?", accountID, currentVersion).Updates(map[string]interface{}{
+		var acc model.Account
+		result := tx.Model(&acc).Where("id = ? AND Version = ?", accountID, currentVersion).UpdateColumns(map[string]interface{}{
 			"balance": account.Balance,
 			"version": account.Version,
 		})
