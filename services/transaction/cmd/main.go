@@ -10,7 +10,6 @@ import (
 	"transaction/service"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 
 	"github.com/shrishyam02/banking-ledger/common/config"
 	ckafka "github.com/shrishyam02/banking-ledger/common/kafka"
@@ -20,10 +19,7 @@ import (
 
 func main() {
 	logger.InitLogger()
-	err := godotenv.Load()
-	if err != nil {
-		return
-	}
+
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
