@@ -40,8 +40,7 @@ type DatabaseConfig struct {
 
 // KafkaConfig holds the kafka configuration.
 type KafkaConfig struct {
-	Brokers           string `env:"KAFKA_BROKERS" default:"kafka:9092"`
-	SchemaRegistryURL string `env:"SCHEMA_REGISTRY_URL" default:"http://schema-registry:8081"`
+	Brokers string `env:"KAFKA_BROKERS" default:""`
 }
 
 type ApiAuth struct {
@@ -133,18 +132,9 @@ func LoadDatabaseConfig() *DatabaseConfig {
 // LoadKafkaConfig loads the kafka configuration.
 func LoadKafkaConfig() *KafkaConfig {
 	kafkaBrokers := os.Getenv("KAFKA_BROKERS")
-	if kafkaBrokers == "" {
-		kafkaBrokers = "kafka:9092" // Default if not set
-	}
-
-	schemaRegistryURL := os.Getenv("SCHEMA_REGISTRY_URL")
-	if schemaRegistryURL == "" {
-		schemaRegistryURL = "http://schema-registry:8081" // Default if not set
-	}
 
 	return &KafkaConfig{
-		Brokers:           kafkaBrokers,
-		SchemaRegistryURL: schemaRegistryURL,
+		Brokers: kafkaBrokers,
 	}
 }
 
