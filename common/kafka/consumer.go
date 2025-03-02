@@ -15,11 +15,12 @@ type KafkaConsumer interface {
 	Consume(ctx context.Context, topic string, groupID string, handler func(kafka.Message) error) error
 }
 
-func NewKafkaConsumer(brokers []string, groupID string) KafkaConsumer {
+func NewKafkaConsumer(brokers []string, groupID string, groupTopics []string) KafkaConsumer {
 	return &kafkaConsumer{
 		reader: kafka.NewReader(kafka.ReaderConfig{
-			Brokers: brokers,
-			GroupID: groupID,
+			Brokers:     brokers,
+			GroupID:     groupID,
+			GroupTopics: groupTopics,
 		}),
 	}
 }
