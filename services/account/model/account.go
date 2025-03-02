@@ -16,4 +16,5 @@ type Account struct {
 	UpdatedAt     time.Time `gorm:"type:timestamp with time zone"`
 	CustomerID    uuid.UUID `gorm:"type:uuid;not null"`
 	Customer      Customer  `gorm:"foreignKey:CustomerID"`
+	Version       int64     `gorm:"type:bigint;not null;default:0"`
 }

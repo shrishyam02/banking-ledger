@@ -2,6 +2,7 @@ package main
 
 import (
 	"account/api"
+	"account/model"
 	"account/processor"
 	"account/repository"
 	"account/service"
@@ -57,6 +58,11 @@ func main() {
 		logger.Log.Fatal().Err(err).Msg("Failed to connect to database")
 	}
 	logger.Log.Info().Msg("Connected to postgres: " + config.AccountService)
+
+	if err := pgDb.AutoMigrate(&model.Account{}, &model.Customer{}); err != nil {
+		logger.Log.Fatal().Err(err).Msg("Failed to migrate database schema")
+	}
+	logger.Log.Info().Msg("Database schema migrated")
 
 	accountRepo := repository.NewAccountRepository(pgDb)
 	accountService := service.NewService(accountRepo)

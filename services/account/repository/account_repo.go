@@ -55,10 +55,8 @@ func (r *accountRepository) UpdateAccountBalance(ctx context.Context, accountID 
 		}
 		logger.Log.Info().Msgf("handleAccountBalanceUpdate account balance check update. %v account:(%v %v %v)", account, accountID, amount, transactionType)
 
-		// Capture the current UpdatedAt timestamp
-		currentUpdatedAt := account.UpdatedAt
+		currentVersion := account.Version
 
-		// Update the balance and set the new UpdatedAt timestamp
 		if transactionType == "credit" {
 			account.Balance = account.Balance + amount
 		} else if transactionType == "debit" {
@@ -68,11 +66,13 @@ func (r *accountRepository) UpdateAccountBalance(ctx context.Context, accountID 
 		}
 		logger.Log.Info().Msgf("handleAccountBalanceUpdate account balance pre update. %v account:(%v %v %v)", account, accountID, amount, transactionType)
 
-		//account.UpdatedAt = time.Now()
-
-		// Use optimistic locking to ensure that the update is only applied if the UpdatedAt timestamp has not changed
-		if err := tx.Model(&account).Where("UpdatedAt = ?", currentUpdatedAt).Updates(model.Account{Balance: account.Balance}).Error; err != nil {
-			return err
+		account.Version++
+		result := tx.Model(&account).Where("id = ? AND version = ?", accountID, currentVersion).Updates(map[string]interface{}{
+			"balance": account.Balance,
+			"version": account.Version,
+		})
+		if result.Error != nil {
+			return result.Error
 		}
 
 		// Check if the update was successful
