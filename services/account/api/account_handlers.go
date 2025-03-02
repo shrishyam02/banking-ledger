@@ -10,28 +10,42 @@ import (
 	"github.com/google/uuid"
 )
 
-type AccountHandler struct {
+type accountHandler struct {
 	service service.AccountService
 }
 
-func NewAccountHandler(service service.AccountService) *AccountHandler {
-	return &AccountHandler{service: service}
+type AccountHandler interface {
+	CreateAccount(c *gin.Context)
+	GetAccount(c *gin.Context)
+	ListAccounts(c *gin.Context)
 }
 
-func (h *AccountHandler) CreateAccount(c *gin.Context) {
+func NewAccountHandler(service service.AccountService) AccountHandler {
+	return &accountHandler{service: service}
+}
+
+func (h *accountHandler) CreateAccount(c *gin.Context) {
 	var account model.Account
 	if err := c.ShouldBindJSON(&account); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if account.CustomerID == uuid.Nil {
+		account.CustomerID = uuid.New()
+	}
+	if err := h.service.CreateOrUpdateCustomer(&account.Customer); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	account.Status = "active"
 	if err := h.service.CreateAccount(&account); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, account)
+	c.JSON(http.StatusOK, account)
 }
 
-func (h *AccountHandler) GetAccount(c *gin.Context) {
+func (h *accountHandler) GetAccount(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid account ID"})
@@ -45,7 +59,7 @@ func (h *AccountHandler) GetAccount(c *gin.Context) {
 	c.JSON(http.StatusOK, account)
 }
 
-func (h *AccountHandler) ListAccounts(c *gin.Context) {
+func (h *accountHandler) ListAccounts(c *gin.Context) {
 	accounts, err := h.service.ListAccounts()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

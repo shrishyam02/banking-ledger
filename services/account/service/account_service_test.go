@@ -2,6 +2,7 @@ package service
 
 import (
 	"account/model"
+	"context"
 	"errors"
 	"testing"
 
@@ -70,6 +71,16 @@ func TestListAccounts(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, accounts, result)
 	mockRepo.AssertExpectations(t)
+}
+
+func (m *MockAccountRepository) CreateOrUpdateCustomer(customer *model.Customer) error {
+	args := m.Called(customer)
+	return args.Error(0)
+}
+
+func (m *MockAccountRepository) UpdateAccountBalance(ctx context.Context, id string, balance float64, currency string) error {
+	args := m.Called(ctx, id, balance, currency)
+	return args.Error(0)
 }
 
 func TestCreateAccount_Error(t *testing.T) {

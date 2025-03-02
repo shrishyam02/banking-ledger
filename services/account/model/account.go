@@ -14,6 +14,6 @@ type Account struct {
 	Balance       float64   `gorm:"type:decimal(10,2)"`
 	CreatedAt     time.Time `gorm:"type:timestamp with time zone"`
 	UpdatedAt     time.Time `gorm:"type:timestamp with time zone"`
-	CustomerID    uuid.UUID `gorm:"-"`
+	CustomerID    uuid.UUID `gorm:"type:uuid;not null"`
 	Customer      Customer  `gorm:"foreignKey:CustomerID"`
 }

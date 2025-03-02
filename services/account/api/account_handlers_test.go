@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -32,6 +33,16 @@ func (m *MockAccountService) GetAccountByID(id uuid.UUID) (*model.Account, error
 func (m *MockAccountService) ListAccounts() ([]model.Account, error) {
 	args := m.Called()
 	return args.Get(0).([]model.Account), args.Error(1)
+}
+
+func (m *MockAccountService) CreateOrUpdateCustomer(customer *model.Customer) error {
+	args := m.Called(customer)
+	return args.Error(0)
+}
+
+func (m *MockAccountService) UpdateAccountBalance(ctx context.Context, id string, balance float64, currency string) error {
+	args := m.Called(ctx, id, balance, currency)
+	return args.Error(0)
 }
 
 func TestCreateAccount(t *testing.T) {
