@@ -34,9 +34,14 @@ func RunServer(ctx context.Context, config Config, registerHandlers HandlerRegis
 
 	router.Use(RequestLogger())
 
-	apiGroup := router.Group("/api/v1")
-	apiGroup.Use(basicAuthMiddleware(config))
-	registerHandlers(apiGroup)
+	router.GET("/health", healthCheckHandler)
+
+	if registerHandlers != nil {
+		apiGroup := router.Group("/api/v1")
+		apiGroup.Use(basicAuthMiddleware(config))
+		registerHandlers(apiGroup)
+		logger.Log.Info().Msgf("Registering api group: %v", config.ServiceName)
+	}
 
 	server := &http.Server{
 		Addr:    ":" + config.Port,
@@ -85,4 +90,10 @@ func RequestLogger() gin.HandlerFunc {
 			Dur("latency", latency).
 			Msg("Request processed")
 	}
+}
+
+func healthCheckHandler(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status": "UP",
+	})
 }
