@@ -9,17 +9,23 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-type LedgerService struct {
+type ledgerService struct {
 	collection *mongo.Collection
 }
 
-func NewLedgerService(db *mongo.Database) *LedgerService {
-	return &LedgerService{
+type LedgerService interface {
+	HandleMessage(ctx context.Context, msg kafka.Message) error
+	GetAccountTransactionHistory(ctx context.Context, accountID string) ([]map[string]interface{}, error)
+	GetTransactionHistory(ctx context.Context, id string) ([]map[string]interface{}, error)
+}
+
+func NewledgerService(db *mongo.Database) LedgerService {
+	return &ledgerService{
 		collection: db.Collection("transactions"),
 	}
 }
 
-func (s *LedgerService) HandleMessage(ctx context.Context, msg kafka.Message) error {
+func (s *ledgerService) HandleMessage(ctx context.Context, msg kafka.Message) error {
 	var transaction map[string]interface{}
 	if err := json.Unmarshal(msg.Value, &transaction); err != nil {
 		return err
@@ -33,7 +39,7 @@ func (s *LedgerService) HandleMessage(ctx context.Context, msg kafka.Message) er
 	return nil
 }
 
-func (s *LedgerService) GetAccountTransactionHistory(ctx context.Context, accountID string) ([]map[string]interface{}, error) {
+func (s *ledgerService) GetAccountTransactionHistory(ctx context.Context, accountID string) ([]map[string]interface{}, error) {
 	filter := map[string]interface{}{
 		"accountId": accountID,
 	}
@@ -51,7 +57,7 @@ func (s *LedgerService) GetAccountTransactionHistory(ctx context.Context, accoun
 	return transactions, nil
 }
 
-func (s *LedgerService) GetTransactionHistory(ctx context.Context, id string) ([]map[string]interface{}, error) {
+func (s *ledgerService) GetTransactionHistory(ctx context.Context, id string) ([]map[string]interface{}, error) {
 	filter := map[string]interface{}{
 		"id": id,
 	}

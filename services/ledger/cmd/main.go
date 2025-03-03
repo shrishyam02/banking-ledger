@@ -46,8 +46,8 @@ func main() {
 	logger.Log.Info().Msg("Connected to MongoDB: " + config.LedgerService)
 
 	mongoDB := mongoClient.Database("banking_ledger_db")
-	ledgerService := service.NewLedgerService(mongoDB)
-	ledgerHandler := api.NewLedgerHandler(ledgerService)
+	ledgerService := service.NewledgerService(mongoDB)
+	ledgerHandler := api.NewledgerHandler(ledgerService)
 
 	registerHandlers := func(apiGroup *gin.RouterGroup) {
 		ledger := apiGroup.Group("/ledger")

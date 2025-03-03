@@ -7,15 +7,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type LedgerHandler struct {
-	service *service.LedgerService
+type ledgerHandler struct {
+	service service.LedgerService
 }
 
-func NewLedgerHandler(service *service.LedgerService) *LedgerHandler {
-	return &LedgerHandler{service: service}
+type LedgerHandler interface {
+	GetAccountTransactionHistory(c *gin.Context)
+	GetTransactionHistory(c *gin.Context)
 }
 
-func (h *LedgerHandler) GetAccountTransactionHistory(c *gin.Context) {
+func NewledgerHandler(service service.LedgerService) LedgerHandler {
+	return &ledgerHandler{service: service}
+}
+
+func (h *ledgerHandler) GetAccountTransactionHistory(c *gin.Context) {
 	accountID := c.Param("id")
 	transactions, err := h.service.GetAccountTransactionHistory(c.Request.Context(), accountID)
 	if err != nil {
@@ -25,7 +30,7 @@ func (h *LedgerHandler) GetAccountTransactionHistory(c *gin.Context) {
 	c.JSON(http.StatusOK, transactions)
 }
 
-func (h *LedgerHandler) GetTransactionHistory(c *gin.Context) {
+func (h *ledgerHandler) GetTransactionHistory(c *gin.Context) {
 	accountID := c.Param("id")
 	transactions, err := h.service.GetTransactionHistory(c.Request.Context(), accountID)
 	if err != nil {

@@ -222,11 +222,13 @@ services:
         condition: service_started
     ports:
       - "8004:8004"
+    networks:
+      - banking-ledger-network
     environment:
       LEDGER_SERVICE_PORT: 8004
       LEDGER_SERVICE_LOG_LEVEL: debug
-      MONGODB_CONNECTION_STRING: mongodb://ledger:ledger@localhost:27017/banking_ledger_db
-      KAFKA_BROKERS: kafka-1:9092,kafka-2:9093,kafka-3:9094
+      MONGODB_CONNECTION_STRING: mongodb://ledger:ledger@mongo:27017/banking_ledger_db
+      KAFKA_BROKERS: kafka-2:9093,kafka-1:9092,kafka-3:9094
       API_AUTH_USERNAME: test
       API_AUTH_PASSWORD: test
 

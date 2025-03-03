@@ -94,3 +94,34 @@ func TestCreateAccount_Error(t *testing.T) {
 	assert.Error(t, err)
 	mockRepo.AssertExpectations(t)
 }
+func TestUpdateAccountBalance(t *testing.T) {
+	mockRepo := new(MockAccountRepository)
+	service := NewService(mockRepo)
+
+	ctx := context.Background()
+	accountID := "test-account-id"
+	amount := 100.0
+	transactionType := "credit"
+
+	mockRepo.On("UpdateAccountBalance", ctx, accountID, amount, transactionType).Return(nil)
+
+	err := service.UpdateAccountBalance(ctx, accountID, amount, transactionType)
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestUpdateAccountBalance_Error(t *testing.T) {
+	mockRepo := new(MockAccountRepository)
+	service := NewService(mockRepo)
+
+	ctx := context.Background()
+	accountID := "test-account-id"
+	amount := 100.0
+	transactionType := "credit"
+
+	mockRepo.On("UpdateAccountBalance", ctx, accountID, amount, transactionType).Return(errors.New("update error"))
+
+	err := service.UpdateAccountBalance(ctx, accountID, amount, transactionType)
+	assert.Error(t, err)
+	mockRepo.AssertExpectations(t)
+}
