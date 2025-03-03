@@ -70,3 +70,14 @@ curl -X POST -H "Content-Type: application/json" -u test:test -d '{
   "amount": 1000.00,
   "transactionType": "credit"
 }' http://localhost:7002/api/v1/transactions
+
+
+curl -u test:test http://localhost:7004/api/v1/ledger/accounts/8db6626d-5e84-4c4e-8cec-7dc54cb20ff5
+
+
+
+curl -u test:test http://localhost:7004/api/v1/ledger/accounts/8db6626d-5e84-4c4e-8cec-7dc54cb20ff5
+[{"_id":"67c55f3f4d1761dd15c0d70d","acceptedAt":"2025-03-03T07:50:22.996Z","accountId":"8db6626d-5e84-4c4e-8cec-7dc54cb20ff5","amount":50,"details":"debit","id":"152a42be-63b6-46f9-919e-ba3996eaa890","processedAt":"2025-03-03T07:50:22.996Z","status":"success","transactionType":"debit"},{"_id":"67c55f3f4d1761dd15c0d70c","acceptedAt":"2025-03-03T07:50:22.996Z","accountId":"8db6626d-5e84-4c4e-8cec-7dc54cb20ff5","amount":100,"details":"Initial deposit","id":"d6263bc8-0eeb-4195-9e64-81abd6d5685c","processedAt":"2025-03-03T07:50:22.996Z","status":"success","transactionType":"credit"}]
+
+curl -u test:test http://localhost:7004/api/v1/ledger/transactions/152a42be-63b6-46f9-919e-ba3996eaa890
+[{"_id":"67c55f3f4d1761dd15c0d70d","acceptedAt":"2025-03-03T07:50:22.996Z","accountId":"8db6626d-5e84-4c4e-8cec-7dc54cb20ff5","amount":50,"details":"debit","id":"152a42be-63b6-46f9-919e-ba3996eaa890","processedAt":"2025-03-03T07:50:22.996Z","status":"success","transactionType":"debit"}]

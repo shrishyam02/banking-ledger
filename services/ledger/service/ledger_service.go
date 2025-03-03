@@ -33,11 +33,29 @@ func (s *LedgerService) HandleMessage(ctx context.Context, msg kafka.Message) er
 	return nil
 }
 
-func (s *LedgerService) GetTransactionHistory(ctx context.Context, accountID string) ([]map[string]interface{}, error) {
+func (s *LedgerService) GetAccountTransactionHistory(ctx context.Context, accountID string) ([]map[string]interface{}, error) {
 	filter := map[string]interface{}{
 		"accountId": accountID,
 	}
-	cursor, err := s.collection.Find(ctx, filter, options.Find().SetSort(map[string]interface{}{"timestamp": -1}))
+	cursor, err := s.collection.Find(ctx, filter, options.Find().SetSort(map[string]interface{}{"acceptedAt": -1}))
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var transactions []map[string]interface{}
+	if err := cursor.All(ctx, &transactions); err != nil {
+		return nil, err
+	}
+
+	return transactions, nil
+}
+
+func (s *LedgerService) GetTransactionHistory(ctx context.Context, id string) ([]map[string]interface{}, error) {
+	filter := map[string]interface{}{
+		"id": id,
+	}
+	cursor, err := s.collection.Find(ctx, filter, options.Find().SetSort(map[string]interface{}{"acceptedAt": -1}))
 	if err != nil {
 		return nil, err
 	}

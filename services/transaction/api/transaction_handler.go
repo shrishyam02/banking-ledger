@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"transaction/model"
 	"transaction/service"
@@ -52,6 +53,7 @@ func (h *transactionHandler) CreateTransaction(c *gin.Context) {
 	}
 
 	transaction.ID = uuid.New()
+	transaction.AcceptedAt = time.Now().UTC()
 
 	transactionBytes, err := json.Marshal(transaction)
 	if err != nil {

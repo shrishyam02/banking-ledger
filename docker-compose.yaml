@@ -13,22 +13,6 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
 
-  # schema-registry:
-  #   image: confluentinc/cp-schema-registry:latest
-  #   hostname: schema-registry
-  #   depends_on:
-  #     - kafka
-  #   ports:
-  #     - "8081:8081"
-  #   networks:
-  #     - banking-ledger-network
-  #   environment:
-  #     SCHEMA_REGISTRY_HOST_NAME: schema-registry
-  #     SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
-  #     SCHEMA_REGISTRY_LISTENERS: http://schema-registry:8081
-  #     SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
-  #     SCHEMA_REGISTRY_DEBUG: 'true'
-
   kafka-1:
     image: confluentinc/cp-kafka:latest
     hostname: kafka-1
@@ -132,7 +116,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: mongo
       MONGO_INITDB_DATABASE: banking_ledger_db
     volumes:
-      - mongo_data:/data/db
+      - mongodb_data:/data/db
       - ./mongo_db/:/docker-entrypoint-initdb.d/
 
   nginx:
@@ -220,19 +204,32 @@ services:
       PROCESSOR_SERVICE_PORT: 8003
       PROCESSOR_SERVICE_LOG_LEVEL: debug
       KAFKA_BROKERS: kafka-1:9092,kafka-2:9093,kafka-3:9094
-  # ledger-service:
-  #   build:
-  #     context: ./services/ledger
-  #     dockerfile: Dockerfile
-  #   depends_on:
-  #     - kafka
-  #     - mongo
-  #   environment:
-  #     MONGO_URI: "mongodb://mongo:27017/banking_ledger_db"
-  #     KAFKA_BROKERS: kafka:9092
 
-
+  ledger-service:
+    build:
+      context: ./services/ledger
+      dockerfile: Dockerfile
+    depends_on:
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+      kafka-3:
+        condition: service_healthy
+      mongo:
+       condition: service_started
+      transaction-processor:
+        condition: service_started
+    ports:
+      - "8004:8004"
+    environment:
+      LEDGER_SERVICE_PORT: 8004
+      LEDGER_SERVICE_LOG_LEVEL: debug
+      MONGODB_CONNECTION_STRING: mongodb://ledger:ledger@localhost:27017/banking_ledger_db
+      KAFKA_BROKERS: kafka-1:9092,kafka-2:9093,kafka-3:9094
+      API_AUTH_USERNAME: test
+      API_AUTH_PASSWORD: test
 
 volumes:
   postgres_data:
-  mongo_data:
+  mongodb_data:

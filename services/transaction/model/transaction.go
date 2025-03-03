@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -10,4 +12,5 @@ type Transaction struct {
 	Amount          float64   `json:"amount"`
 	TransactionType string    `json:"transactionType"` // e.g., "credit", "debit"
 	Details         string    `json:"details"`
+	AcceptedAt      time.Time `json:"acceptedAt"`
 }

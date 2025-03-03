@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"sync"
+	"time"
 
 	"account/service"
 
@@ -87,6 +88,7 @@ func (p *processor) handleAccountBalanceUpdate(ctx context.Context, msg kafka.Me
 
 	//TODO: retry logic on optimistic lock failure error
 	err := p.accountService.UpdateAccountBalance(ctx, accountID, amount, transactionType)
+
 	if err != nil {
 		transaction["status"] = "failed"
 		transaction["error"] = err.Error()
@@ -96,6 +98,7 @@ func (p *processor) handleAccountBalanceUpdate(ctx context.Context, msg kafka.Me
 		transaction["error"] = ""
 		logger.Log.Info().Msgf("handleAccountBalanceUpdate account balance update sucesss. account:(%v)", transaction)
 	}
+	transaction["processedAt"] = time.Now().UTC()
 
 	transactionBytes, err := json.Marshal(transaction)
 	if err != nil {

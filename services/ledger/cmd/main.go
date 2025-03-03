@@ -45,13 +45,14 @@ func main() {
 	}
 	logger.Log.Info().Msg("Connected to MongoDB: " + config.LedgerService)
 
-	mongoDB := mongoClient.Database("ledger")
+	mongoDB := mongoClient.Database("banking_ledger_db")
 	ledgerService := service.NewLedgerService(mongoDB)
 	ledgerHandler := api.NewLedgerHandler(ledgerService)
 
 	registerHandlers := func(apiGroup *gin.RouterGroup) {
 		ledger := apiGroup.Group("/ledger")
 		{
+			ledger.GET("/accounts/:id", ledgerHandler.GetAccountTransactionHistory)
 			ledger.GET("/transactions/:id", ledgerHandler.GetTransactionHistory)
 		}
 	}

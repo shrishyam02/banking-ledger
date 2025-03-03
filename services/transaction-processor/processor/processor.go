@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/segmentio/kafka-go"
 	ckafka "github.com/shrishyam02/banking-ledger/common/kafka"
@@ -107,6 +108,7 @@ func (tp *TransactionProcessor) handleMessage(ctx context.Context, msg kafka.Mes
 
 	// Validate the transaction
 	if err := tp.validateTransaction(transaction); err != nil {
+		transaction["processedAt"] = time.Now().UTC()
 		transaction["status"] = "failed"
 		transaction["error"] = err.Error()
 		return tp.publishTransactionStatus(ctx, msg.Key, transaction)
@@ -118,6 +120,7 @@ func (tp *TransactionProcessor) handleMessage(ctx context.Context, msg kafka.Mes
 		Value: msg.Value,
 	}
 	if err := tp.producer.Produce(ctx, tp.producerTopics["account-balance-updates"], accountMessage); err != nil {
+		transaction["processedAt"] = time.Now().UTC()
 		transaction["status"] = "failed"
 		transaction["error"] = err.Error()
 		return tp.publishTransactionStatus(ctx, msg.Key, transaction)
